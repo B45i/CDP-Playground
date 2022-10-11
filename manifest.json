@@ -1,0 +1,21 @@
+{
+    "name": "CDP Test",
+    "version": "1.0.0",
+    "description": "Test Chrome DevTools Protocol",
+    "manifest_version": 3,
+    "author": "B45i",
+    "permissions": ["debugger", "tabs"],
+    "action": {
+        "default_title": "CDP Tester"
+    },
+    "background": {
+        "service_worker": "service-worker.js"
+    },
+    "content_scripts": [
+        {
+            "matches": ["http://*/*", "https://*/*", "<all_urls>"],
+            "js": ["content-script.js"],
+            "css": ["content.styles.css"]
+        }
+    ]
+}
