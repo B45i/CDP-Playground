@@ -2,13 +2,15 @@ const btnStart = document.getElementById('start');
 const btnInspect = document.getElementById('btnInspect');
 inputURL = document.getElementById('url');
 btnStart.addEventListener('click', handleStartCDP);
-btnInspect.addEventListener('click', inspectElement);
+btnInspect.addEventListener('click', toggleInspectElement);
 
 const container = document.getElementById('container');
 
 let tabId;
 let debugee;
 let isInspectMode = false;
+
+const nodes = new Map();
 
 chrome.debugger.onEvent.addListener(onEvent);
 chrome.debugger.onDetach.addListener(onDetach);
@@ -18,52 +20,46 @@ window.addEventListener('unload', function () {
 });
 submitHandler();
 
-const getTabId = () => {
-    return new Promise((resolve, reject) => {
-        chrome.tabs.query({ active: true, lastFocusedWindow: true }, tabs => {
-            console.log('tabId', tabs[0].id);
-            resolve(tabs[0].id);
-        });
-    });
-};
-
 async function handleStartCDP() {
     try {
-        // openURL();
-        // tabId = await getTabId();
         tabId = await openURL();
-        container.innerText += 'Tab Id: ' + tabId;
+        print('Connected to Tab, Id: ' + tabId);
         debugee = attachDebugger(tabId);
 
         sendCDPCommand('DOM.enable', {});
         sendCDPCommand('Overlay.enable', {});
+        // sendCDPCommand('DOMSnapshot.enable', {});
         // sendCDPCommand('Inspector.enable', {}); // don't need
-
-        // inspectElement();
     } catch (error) {
-        container.innerText += '\n' + error.message;
+        print('ERROR ' + error.message);
     }
 }
 
 function onEvent(debuggeeId, message, params) {
     if (message === 'DOM.setChildNodes') {
+        addNode(params.nodes[0]);
         return;
     }
 
     console.log('onEvent ' + message, params);
+    print('onEvent ' + message);
 
     if (message === 'Overlay.inspectNodeRequested') {
-        console.log('stopping inspect');
-        inspectElement();
+        // sendCDPCommand('DOM.resolveNode', { nodeId: params.backendNodeId });
+        console.log('backendNodeId', params.backendNodeId);
+        sendCDPCommand('DOM.getDocument'); // check if this needed
+        sendCDPCommand('DOM.pushNodesByBackendIdsToFrontend', {
+            backendNodeIds: [params.backendNodeId],
+        });
+        toggleInspectElement();
     }
 
     if (tabId != debuggeeId.tabId) return;
-    // sendCDPCommand('Overlay.inspectNodeRequested', null);
 }
 
 function onDetach(event, reason) {
     console.log('debugger detach', event);
-    container.innerText += '\n disconnected ' + reason;
+    print('disconnected ' + reason);
 }
 
 function submitHandler() {
@@ -81,7 +77,7 @@ function submitHandler() {
         } catch (e) {
             error = true;
             paramsInput.classList.add('error');
-            container.innerText += '\n Command Error ' + e.message;
+            print('Command Error ' + e.message);
         }
 
         if (error || !debugee) {
@@ -94,7 +90,7 @@ function submitHandler() {
 
 function sendCDPCommand(method, commandParams) {
     if (!debugee) {
-        container.innerText += '\n Debugger not connected ';
+        print('Debugger not connected ');
     }
     chrome.debugger.sendCommand(debugee, method, commandParams, x => {
         console.log(method + ' Response: ', x);
@@ -107,17 +103,17 @@ function attachDebugger(tabId) {
 
     try {
         chrome.debugger.attach(debuggeeId, version, params => {
-            container.innerText += '\n Connected to cdp';
+            print('Connected to cdp');
             console.log(params);
         });
     } catch (error) {
-        container.innerText += error.message;
+        print(error.message);
     }
 
     return debuggeeId;
 }
 
-function inspectElement() {
+function toggleInspectElement() {
     sendCDPCommand('Overlay.setInspectMode', {
         mode: isInspectMode ? 'none' : 'searchForNode',
         highlightConfig: {
@@ -147,4 +143,15 @@ function openURL() {
             }
         );
     });
+}
+
+function print(text) {
+    container.innerText += '\n' + text;
+}
+
+function addNode(node) {
+    nodes.set(node.nodeId, node);
+    if (node.children) {
+        node.children.forEach(node => addNode(node));
+    }
 }

@@ -1,5 +1,6 @@
 body {
     font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
+    font-size: 1rem;
 }
 
 .error {
@@ -10,6 +11,12 @@ body {
     display: flex;
     width: 100%;
     margin-bottom: 1rem;
+}
+
+header {
+    position: sticky;
+    top: 0;
+    background-color: #fff;
 }
 
 .fg {

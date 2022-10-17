@@ -8,29 +8,33 @@
         <title>Document</title>
     </head>
     <body>
-        <div class="row">
-            <input type="text" id="url" placeholder="URL" class="fg" />
-            <button id="start">Start</button>
-            <button id="btnInspect">Inspect Element</button>
-        </div>
+        <header>
+            <div class="row">
+                <input type="text" id="url" placeholder="URL" class="fg" />
+                <button id="start">Start</button>
+                <button id="btnInspect">Inspect Element</button>
+            </div>
 
-        <form action="" class="row" id="cmd">
-            <input
-                name="command"
-                type="text"
-                id="command"
-                placeholder="Command"
-            />
-            <textarea
-                class="fg"
-                name="params"
-                id="params"
-                placeholder="params"
-            ></textarea>
-            <input name="submit" type="submit" value="Send Command" />
-        </form>
+            <form action="" class="row" id="cmd">
+                <input
+                    name="command"
+                    type="text"
+                    id="command"
+                    placeholder="Command"
+                />
+                <textarea
+                    class="fg"
+                    name="params"
+                    id="params"
+                    placeholder="params"
+                ></textarea>
+                <input name="submit" type="submit" value="Send Command" />
+            </form>
+        </header>
 
-        <pre id="container"></pre>
+        <main>
+            <pre id="container"></pre>
+        </main>
 
         <script defer src="./main.js"></script>
     </body>
